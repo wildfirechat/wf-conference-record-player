@@ -1,0 +1,51 @@
+1. 转码
+2. 音视频合并
+3. 同一用户多端视频时长拼接
+https://stackoverflow.com/questions/36819084/concatenate-videos-and-add-black-frames-between-them-with-ffmpeg
+ffmpeg -f concat -i list.txt -c:v copy -c:a copy joined.mp4
+
+4. 所有用户的视频布局拼接
+https://trac.ffmpeg.org/wiki/Create%20a%20mosaic%20out%20of%20several%20input%20videos
+
+大小统一
+find . -iname "*.mp4" -exec ffmpeg -i {} -vf scale="336x192" {}.resize.mp4 \;
+
+
+# 获取视频时长
+ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 input.mp4
+
+
+时长统一
+
+在视频结尾加上20秒黑屏
+ffmpeg -i xqq.mp4 -filter_complex "tpad=stop_duration=20;apad=pad_dur=20" test.mp4
+或
+ffmpeg -i input.mp4 -filter_complex "[0:v]tpad=stop_duration=2[v];[0:a]apad=pad_dur=2[a]" -map "[v]" -map "[a]" output.mp4
+
+加多长时间呢
+同一用户其后面一个视频的时间戳 - 前一个视频的时间戳
+
+视频开头加 20 秒黑屏
+ffmpeg -i xqq.mp4 -filter_complex "tpad=start_duration=20" test.mp4
+# 音频延迟 20 秒
+ffmpeg -i "test.mp4" -itsoffset 20 -i "test.mp4" -map 0:v -map 1:a -c copy "movie-audio-delayed.mp4"
+
+
+生成黑屏视频
+
+# 黑屏，保留音频
+ffmpeg -i input.mp4 -vf drawbox=color=black:t=fill -c:a copy output.mp4
+
+
+ffmpeg -f lavfi -i aevalsrc=0 -i input.mp4 -c:v copy -c:a aac -map 0 -map 1:v -shortest output.mp4
+
+
+concat.list file
+file 'test.mp4'
+file 'test-end.mp4'
+
+
+ffmpeg -i top_l.mp4 -i top_r.mp4 -i bottom_l.mp4 -i bottom_r.mp4 -filter_complex \
+"[0:v][1:v]hstack[t];[2:v][3:v]hstack[b];[t][b]vstack[v]; \
+ [0:a][1:a][2:a][3:a]amerge=inputs=4[a]" \
+-map "[v]" -map "[a]" -ac 2 -shortest output.mp4
