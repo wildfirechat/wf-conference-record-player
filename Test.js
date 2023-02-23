@@ -21,7 +21,7 @@ function mergeAudioAndVideo(inputVideo, inputAudio, outputVideo) {
 
 
 function padEnd(inputVideo, duration, outVideo) {
-    console.log('padEnd',inputVideo, outVideo, duration);
+    console.log('padEnd', inputVideo, outVideo, duration);
     let cmd = `ffmpeg -i ${inputVideo} -filter_complex "[0:v]tpad=stop_duration=${duration}[v];[0:a]apad=pad_dur=${duration}[a]" -map "[v]" -map "[a]" ${outVideo}`
     return execSync(cmd);
 }
@@ -30,7 +30,7 @@ function padStart(inputVideo, duration, outVideo) {
     duration = Math.round(duration);
     console.log('padStart', inputVideo, outVideo, duration);
     let tmpFile = inputVideo + '.mp4';
-    let padCmd = `ffmpeg -i ${inputVideo} -filter_complex "tpad=start_duration=${duration}" ${tmpFile} `;
+    let padCmd = `ffmpeg -i ${inputVideo} -video_track_timescale 90k -filter_complex "tpad=start_duration=${duration}" ${tmpFile} `;
     execSync(padCmd);
     let delayCmd = `ffmpeg -i ${tmpFile} -itsoffset ${duration} -i ${tmpFile} -map 0:v -map 1:a -c copy ${outVideo}`;
     execSync(delayCmd);
@@ -53,7 +53,8 @@ function concat(outputVideo, ...videos) {
         // cf += `duration ${duration(video)} \n`
     })
     execSync(`echo "${cf}" > list.txt`);
-    let concatCmd = `ffmpeg -f concat -i list.txt -c:v copy -c:a copy ${outputVideo}`
+    //let concatCmd = `ffmpeg -f concat -i list.txt -c:v copy -c:a copy ${outputVideo}`
+    let concatCmd = `ffmpeg -f concat -i list.txt -c:v h264 -c:a aac ${outputVideo}`
     execSync(concatCmd);
     execSync(`rm -f list.txt`);
 }
@@ -176,12 +177,12 @@ function test() {
             let sortedVideos = videos.sort();
             let ts = sortedVideos[0].split('-')[4];
             let paddedUserVideos = [];
-            padStart(`${tmpMergedVideoDir}/${sortedVideos[0]}`, (ts - startTimestamp) / 1000 , `${tmpUserPaddedVideoDir}/${sortedVideos[0]}`)
+            padStart(`${tmpMergedVideoDir}/${sortedVideos[0]}`, (ts - startTimestamp) / 1000 / 1000, `${tmpUserPaddedVideoDir}/${sortedVideos[0]}`)
             paddedUserVideos.push(`${tmpUserPaddedVideoDir}/${sortedVideos[0]}`)
             for (let i = 1; i < sortedVideos.length; i++) {
                 let preTS = sortedVideos[i - 1].split('-')[4];
                 let curTS = sortedVideos[i].split('-')[4];
-                padStart(`${tmpMergedVideoDir}/${sortedVideos[i]}`, (curTS - preTS) / 1000  `${tmpUserPaddedVideoDir}/${sortedVideos[i]}`)
+                padStart(`${tmpMergedVideoDir}/${sortedVideos[i]}`, (curTS - preTS) / 1000 / 1000, `${tmpUserPaddedVideoDir}/${sortedVideos[i]}`)
                 paddedUserVideos.push(`${tmpUserPaddedVideoDir}/${sortedVideos[i]}`)
             }
             // 同一用户的多段视频拼接
@@ -189,7 +190,7 @@ function test() {
 
         } else {
             let ts = videos[0].split('-')[4];
-            padStart(`${tmpMergedVideoDir}/${videos[0]}`, (ts - startTimestamp) / 1000 , `${tmpPaddedVideoDir}/${videos[0]}`)
+            padStart(`${tmpMergedVideoDir}/${videos[0]}`, (ts - startTimestamp) / 1000 / 1000, `${tmpPaddedVideoDir}/${videos[0]}`)
         }
     })
 
