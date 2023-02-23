@@ -102,6 +102,42 @@ function listAudioMjrs() {
     return files;
 }
 
+// FYI https://www.jimby.name/techbits/recent/xstack/
+function merge(outputVideo, w, h, ...videos) {
+    let input = () => {
+        let tmp = '';
+        videos.forEach(v => {
+            tmp += '-i ' + v + '\\';
+        })
+        return tmp;
+    }
+
+    let filterConfig = () => {
+        let config = ''
+        for (let i = 0; i < videos.length; i++) {
+            config  += `[${i}:v] setpts=PTS-STARTPTS, scale=qvga [a${i}];\\`
+        }
+        return config;
+    }
+    //[a0][a1][a2][a3][a4][a5][a6][a7][a8]xstack=inputs=9:layout=0_0|w0_0|w0+w1_0|0_h0|w0_h0|w0+w1_h0|0_h0+h1|w0_h0+h1|w0+w1_h0+h1[out] \
+
+    let cmd = `ffmpeg \
+    ffmpeg \
+    ${input()} \
+    -filter_complex " \
+      [0:v] setpts=PTS-STARTPTS, scale=qvga [a0]; \
+      [1:v] setpts=PTS-STARTPTS, scale=qvga [a1]; \
+      [2:v] setpts=PTS-STARTPTS, scale=qvga [a2]; \
+      [a0][a1][a2]xstack=inputs=3:layout=0_0|0_h0|w0_0[out];amix=inputs=3 \
+      " \
+    -map "[out]" \
+    -c:v libx264  output_col_2x2.mp4
+    `
+    console.log('grid layout')
+    execSync(cmd)
+
+}
+
 function test() {
     let bigVideoMjrs = listBigVideoMjrs();
     let startTimestamp = bigVideoMjrs
@@ -194,21 +230,9 @@ function test() {
         }
     })
 
-    // grid layout
-    let cmd = ` ffmpeg \
-    -i ${tmpPaddedVideoDir}/${bigVideoMjrs[0]}.mp4 -i  ${tmpPaddedVideoDir}/${bigVideoMjrs[1]}.mp4 -i  ${tmpPaddedVideoDir}/${bigVideoMjrs[2]}.mp4 \
-    -filter_complex " \
-    nullsrc=size=640x480 [base]; \
-    [0:v] setpts=PTS-STARTPTS, scale=320x240 [upperleft]; \
-    [1:v] setpts=PTS-STARTPTS, scale=320x240 [upperright]; \
-    [2:v] setpts=PTS-STARTPTS, scale=320x240 [lowerleft]; \
-    [base][upperleft] overlay=shortest=1 [tmp1]; \
-    [tmp1][upperright] overlay=shortest=1:x=320 [tmp2]; \
-    [tmp2][lowerleft] overlay=shortest=1:y=240 \
-    " \
-    -c:v libx264 output.mp4 \
-    `
-    console.log('grid layout')
+    // grid layou
+
+
     execSync(cmd)
 
     // maxDuration(...files);
@@ -228,5 +252,11 @@ function test() {
 // padEnd('xqq.mp4', 30, 'test.mp4');
 // padStart('test.mp4', 30, 'xxx.mp4')
 // concat('yyy.mp4', 'xxx.mp4', 'test.mp4')
+
+function xx() {
+    let cmd = `
+    ${20 / 2}
+    `
+}
 
 test();

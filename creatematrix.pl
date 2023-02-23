@@ -21,6 +21,7 @@ if ($ARGV[0] =~ /\-h/i ||
 
 $matrix_size = $ARGV[0];
 $order_parm = $ARGV[1];
+$out_video = $ARGV[2];
 
 print "#!/bin/sh\n";
 
@@ -51,7 +52,7 @@ print "# path      = [$path]\n";
 
 
 opendir(TDIR, $path);
-@files = grep { /\.mkv$/ } readdir(TDIR);
+@files = grep { /\.mp4$/ } readdir(TDIR);
 
 $count = $#files;  # count of array is zero based
 
@@ -142,7 +143,7 @@ for($i = 0, $c = $inputcount; $c > 0; $c--, $i++) {
   # use the below filter definition to insert a yellow id in the upper left of each video
   # $filter_complex .= "      [$i\:v] setpts=PTS-STARTPTS, scale=$scalevar, drawtext=\"text=\'$id\':fontsize=20:fontcolor=yellow\" [a$i]; \\\n";
 
-  # use the below filter definition for no no id 
+  # use the below filter definition for no no id
   $filter_complex .= "      [$i\:v] setpts=PTS-STARTPTS, scale=$scalevar [a$i]; \\\n";
   $labellist .= "[a$i]";
 
@@ -171,7 +172,7 @@ print "$xspec \\\n";
 
 $cmd_postlude = "      \" \\
     -map \"[out]\" \\
-    -c:v libx264 -t '30' -f matroska -  \| ffplay -autoexit -left 10 -top 10  - ";
+    -c:v libx264  $out_video";
 
 
 print "$cmd_postlude\n\n";
@@ -282,7 +283,7 @@ sub xstackspec {
      }
 
      $nothing = 1;
-  
+
 # inner loop
 # decrement $incount here and jump out when
 # we are done
@@ -311,7 +312,7 @@ sub xstackspec {
 
     # The above code is written in COLUMN MAJOR order.
     # If ROW MAJOR order is desired, perform the switch here.
-    # Swap the specs around and exchange  w <-> h 
+    # Swap the specs around and exchange  w <-> h
 
      if ($ord eq "row") {
         $left = $hspec;
@@ -345,6 +346,7 @@ CUTOFF:
 # Add the [out] label
 
   $returnspec .= "[out]";
+  $returnspec .=";amix=inputs=$inputcount";
 
   return $returnspec;
 
