@@ -194,6 +194,22 @@ function test() {
         }
     })
 
+    // grid layout
+    let cmd = ` ffmpeg \
+    -i ${tmpPaddedVideoDir}/${bigVideoMjrs[0]}.mp4 -i  ${tmpPaddedVideoDir}/${bigVideoMjrs[1]}.mp4 -i  ${tmpPaddedVideoDir}/${bigVideoMjrs[2]}.mp4 \
+    -filter_complex " \
+    nullsrc=size=640x480 [base]; \
+    [0:v] setpts=PTS-STARTPTS, scale=320x240 [upperleft]; \
+    [1:v] setpts=PTS-STARTPTS, scale=320x240 [upperright]; \
+    [2:v] setpts=PTS-STARTPTS, scale=320x240 [lowerleft]; \
+    [base][upperleft] overlay=shortest=1 [tmp1]; \
+    [tmp1][upperright] overlay=shortest=1:x=320 [tmp2]; \
+    [tmp2][lowerleft] overlay=shortest=1:y=240 \
+    " \
+    -c:v libx264 output.mp4 \
+    `
+    console.log('grid layout')
+    execSync(cmd)
 
     // maxDuration(...files);
 }
