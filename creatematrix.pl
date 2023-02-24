@@ -135,7 +135,7 @@ $labellist = "";
 
 # make sure the scale is set correctly for large matricies.  size >= 5x5 gets qqvga.
 
-$scalevar = ($matrixvar >= 5 ? "qvga" : "vga");
+$scalevar = ($matrixvar >= 5 ? "qqvga" : "qvga");
 
 
 for($i = 0, $c = $inputcount; $c > 0; $c--, $i++) {
