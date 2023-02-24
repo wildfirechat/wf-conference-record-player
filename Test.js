@@ -111,34 +111,9 @@ function merge(outputVideo, w, h, ...videos) {
         })
         return tmp;
     }
-
-    let filterConfig = () => {
-        let config = ''
-        for (let i = 0; i < videos.length; i++) {
-            config  += `[${i}:v] setpts=PTS-STARTPTS, scale=qvga [a${i}];\\`
-        }
-        return config;
-    }
-    //[a0][a1][a2][a3][a4][a5][a6][a7][a8]xstack=inputs=9:layout=0_0|w0_0|w0+w1_0|0_h0|w0_h0|w0+w1_h0|0_h0+h1|w0_h0+h1|w0+w1_h0+h1[out] \
-
-    let cmd = `ffmpeg \
-    ffmpeg \
-    ${input()} \
-    -filter_complex " \
-      [0:v] setpts=PTS-STARTPTS, scale=qvga [a0]; \
-      [1:v] setpts=PTS-STARTPTS, scale=qvga [a1]; \
-      [2:v] setpts=PTS-STARTPTS, scale=qvga [a2]; \
-      [a0][a1][a2]xstack=inputs=3:layout=0_0|0_h0|w0_0[out];amix=inputs=3 \
-      " \
-    -map "[out]" \
-    -c:v libx264  output_col_2x2.mp4
-    `
-    console.log('grid layout')
-    execSync(cmd)
-
 }
 
-function test() {
+function decodeAndMerge() {
     let bigVideoMjrs = listBigVideoMjrs();
     let startTimestamp = bigVideoMjrs
         .map(f => f.split('-')[4])
@@ -198,17 +173,20 @@ function test() {
 
     //execSync(`rm -rf ${tmpDir}`)
 
-    let tmpPaddedVideoDir = 'tmpPaddedVideo';
+    // 保存经过时间对齐后的所有参与者会议录制视频
+    const tmpPaddedVideoDir = 'tmpPaddedVideo';
     execSync(`rm -rf ${tmpPaddedVideoDir}`)
     execSync(`mkdir ${tmpPaddedVideoDir}`)
+
+    // 保存某个参与者多次进出会议产生的录制视频
+    const tmpUserPaddedVideoDir = 'tmpUserPaddedVideo';
+    execSync(`rm -rf ${tmpUserPaddedVideoDir}`)
+    execSync(`mkdir ${tmpUserPaddedVideoDir}`)
 
     // pad
     userVideoMap.forEach((videos, userId) => {
         console.log('user videos', videos)
         if (videos.length > 1) {
-            let tmpUserPaddedVideoDir = 'tmpUserPaddedVideo';
-            execSync(`rm -rf ${tmpUserPaddedVideoDir}`)
-            execSync(`mkdir ${tmpUserPaddedVideoDir}`)
 
             let sortedVideos = videos.sort();
             let ts = sortedVideos[0].split('-')[4];
@@ -231,32 +209,32 @@ function test() {
     })
 
     // grid layou
+    const cmd = `ls ${tmpPaddedVideoDir}/*.mp4`;
+    const stdout = execSync(cmd);
+    console.log('xxx ', stdout.toString());
+    let files = stdout.toString().split('\n').filter(f => f.endsWith('.mp4'));
+    console.log('tmpPaddedVideo: \n', files);
 
+    let matrixSize = 0;
+    if (files.length <= 4) {
+        matrixSize = 2;
+    } else if (files.length <= 9) {
+        matrixSize = 3;
+    } else if (files.length <= 16) {
+        matrixSize = 4;
+    } else if (files.length <= 25) {
+        matrixSize = 5
+    }
 
-    execSync(cmd)
+    const outputFile = files[0].split('/')[1].split('-').slice(0, 3).join('-');
+    execSync('rm -f merge.sh')
+    execSync(`rm -f ${outputFile}`)
+    execSync(`perl creatematrix.pl ${matrixSize} 'row' ${outputFile}.mp4 > merge.sh`)
+    execSync('chmod u+x merge.sh')
+    execSync('cat merge.sh')
+    console.log('merge ...')
+    execSync('./merge.sh')
 
-    // maxDuration(...files);
 }
 
-
-//
-// exec(cmd, (error, stdout, stderr) => {
-//     if (error) {
-//         console.log(`exec error: ${error}`)
-//         return
-//     }
-//     console.log(`stdout: ${stdout}`);
-//     console.error(`stderr: ${stderr}`);
-// })
-
-// padEnd('xqq.mp4', 30, 'test.mp4');
-// padStart('test.mp4', 30, 'xxx.mp4')
-// concat('yyy.mp4', 'xxx.mp4', 'test.mp4')
-
-function xx() {
-    let cmd = `
-    ${20 / 2}
-    `
-}
-
-test();
+decodeAndMerge()

@@ -41,7 +41,7 @@ $maxcount = $matrixvar * $matrixvar;
 
 if ($ordervar ne "row" && $ordervar ne "col") { $ordervar = "row" }
 
-$path = "./videos";
+$path = "./tmpPaddedVideo";
 
 print "# matrixvar = [$matrixvar]\n";
 print "# ordervar  = [$ordervar]\n";
