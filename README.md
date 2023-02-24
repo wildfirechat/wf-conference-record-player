@@ -1,24 +1,23 @@
-# wf-player
+## 野火音视频会议云端录制处理工具
 
-## Project setup
-```
-npm install
-```
+本工具用来将野火音视频会议云端录制文件转换成```mp4```格式文件
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+### 功能说明
+1. 将录制的```mjr```格式文件处理成```mp4```格式媒体文件
+2. 将同一个会议参与者的音视频合并，生成包含音频和视频的单一视频文件
+3. 将所有会议参与者的视频文件时间对齐
+4. 将所有会议参与者的视频文件按宫格布局方式，拼接成一个新的会议视频文件
 
-### Compiles and minifies for production
-```
-npm run build
-```
+### 依赖说明
+1. Linux 系统，
+2. janus-tools，ubuntu 系统上，可通过```sudo apt install janus-tools```进行安装
+3. perl
+4. node
+5. ffmpeg
 
-### Lints and fixes files
-```
-npm run lint
-```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+### 使用说明
+1. 将```creatematrix.pl```和```cr2mp4.js```拷贝到会议录制文件目录
+2. 执行```node cr2mp4.js```，成功之后，将生成```${会议名}-output.mp4```
+
+

@@ -209,9 +209,10 @@ function decodeAndMerge() {
     })
 
     // grid layou
+
+    // const tmpPaddedVideoDir = 'tmpPaddedVideo';
     const cmd = `ls ${tmpPaddedVideoDir}/*.mp4`;
     const stdout = execSync(cmd);
-    console.log('xxx ', stdout.toString());
     let files = stdout.toString().split('\n').filter(f => f.endsWith('.mp4'));
     console.log('tmpPaddedVideo: \n', files);
 
@@ -226,12 +227,13 @@ function decodeAndMerge() {
         matrixSize = 5
     }
 
-    const outputFile = files[0].split('/')[1].split('-').slice(0, 3).join('-');
+    let outputFile = files[0].split('/')[1].split('-').slice(0, 2).join('-');
+    outputFile += '.mp4'
     execSync('rm -f merge.sh')
     execSync(`rm -f ${outputFile}`)
-    execSync(`perl creatematrix.pl ${matrixSize} 'row' ${outputFile}.mp4 > merge.sh`)
+    execSync(`perl creatematrix.pl ${matrixSize} 'row' ${outputFile} > merge.sh`)
     execSync('chmod u+x merge.sh')
-    execSync('cat merge.sh')
+    console.log(execSync('cat merge.sh').toString())
     console.log('merge ...')
     execSync('./merge.sh')
 
